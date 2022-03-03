@@ -1,14 +1,15 @@
+import json
 from django.http import HttpResponse, JsonResponse
 from django.db.models.aggregates import Count
+from django.views.decorators.csrf import csrf_exempt
 from rest_framework import viewsets, mixins
 from rest_framework.decorators import action
-from rest_framework.permissions import AllowAny
 from rest_framework.filters import OrderingFilter
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
-from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 from main import serializers
-from main.auth.voter import VoterUser
+from main.auth.users import VoterUser, MonitorUser
 from .models import Department, Unit, Nominee, Voter
 from .auth.decryptor import encrypt, decrypt
 
@@ -26,7 +27,7 @@ class UnitViewSet(ModelViewSet):
     def get_permissions(self):
         if self.request.method == 'PUT':
             return [IsAdminUser()]
-        return [IsAuthenticated()]
+        return [AllowAny()]
 
     def get_serializer_class(self):
         if self.request.method == 'PUT':
@@ -67,8 +68,18 @@ class VoterViewSet( mixins.RetrieveModelMixin,
         return JsonResponse({'token': user.token})
 
 
+@csrf_exempt
+def monitor_register(request):
+    if request.method == 'POST':
+        raw_data = request.body.decode('utf-8')
+        register_data = json.loads(raw_data)
+        user = MonitorUser(register_data)
+        return JsonResponse({'token': f'{user.token}'})
+
+
 def say_hello(request):
     if request.user.is_authenticated:
         return HttpResponse(f'<h1>You don\'t have permission to say hello</h1>')
     # name = decrypt(name) if len(name) > 10 else encrypt(name)
     return HttpResponse(f'<h1>Hello!</h1>')
+

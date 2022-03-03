@@ -1,13 +1,12 @@
-from aifc import Error
 # from rest_framework import authentication, exceptions, settings
 # from rest_framework.authentication import get_authorization_header
-from .voter import VoterUser
+from .users import MonitorUser, VoterUser
 
 from rest_framework_simplejwt import authentication
 from rest_framework_simplejwt.authentication import api_settings
 
 
-class VoterAuthentication(authentication.JWTAuthentication):
+class CustomUserAuthentication(authentication.JWTAuthentication):
     # keyword = 'Token'
 
     def authenticate(self, request):
@@ -25,6 +24,10 @@ class VoterAuthentication(authentication.JWTAuthentication):
 
     def get_user(self, validated_token):
        
-        qr_id = validated_token[api_settings.USER_ID_CLAIM]       
-        return VoterUser(qr_id)
+        id = validated_token[api_settings.USER_ID_CLAIM]
+
+        if len(id.split('_')) == 3 :
+            return VoterUser(id)
+
+        return MonitorUser.get(id)
         

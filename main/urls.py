@@ -9,5 +9,6 @@ router.register(r'voters', views.VoterViewSet, basename='voter')
 
 urlpatterns = [
     path('hello/', views.say_hello),
+    path('register/', views.monitor_register),
     *router.urls
 ]
