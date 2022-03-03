@@ -6,7 +6,7 @@ from rest_framework import viewsets, mixins
 from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
-from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated, SAFE_METHODS
 from django_filters.rest_framework import DjangoFilterBackend
 from main import serializers
 from main.auth.users import VoterUser, MonitorUser
@@ -43,7 +43,7 @@ class NomineeViewSet(ModelViewSet):
     ordering_fields = ['name', 'votes_count']
 
     def get_permissions(self):
-        if self.request.method in ['POST', 'PUT', 'DELETE']:
+        if self.request.method not in SAFE_METHODS:
             return [IsAdminUser()]
         return [IsAuthenticated()]
 
@@ -56,6 +56,11 @@ class VoterViewSet( mixins.RetrieveModelMixin,
     filter_backends = [DjangoFilterBackend]
     # filterset_class = VoterFilter
     filterset_fields = ['unit']
+    
+    def get_permissions(self):
+        if self.request.method not in SAFE_METHODS:
+            return [IsAdminUser()]
+        return [IsAuthenticated()]
 
     def get_serializer_class(self):
         if self.request.method == 'POST':
