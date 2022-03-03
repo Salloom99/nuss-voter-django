@@ -26,6 +26,11 @@ class NomineeSerilaizer(ModelSerializer):
         model = Nominee
         fields = ['id', 'name', 'unit', 'votes_count']
 
+class UpdateNomineeSerializer(ModelSerializer):
+    class Meta:
+        model = Nominee
+        fields = ['name']
+
 class NomineeVoteSerializer(ModelSerializer):
     class Meta:
         model = Nominee

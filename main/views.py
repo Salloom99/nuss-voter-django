@@ -37,10 +37,14 @@ class UnitViewSet(ModelViewSet):
 
 class NomineeViewSet(ModelViewSet):
     queryset = Nominee.objects.annotate(votes_count=Count('votes'))
-    serializer_class = serializers.NomineeSerilaizer
     filter_backends = [DjangoFilterBackend, OrderingFilter]
     filterset_fields = ['unit']
     ordering_fields = ['name', 'votes_count']
+
+    def get_serializer_class(self):
+        if self.request.method == 'PUT':
+            return serializers.UpdateNomineeSerializer
+        return serializers.NomineeSerilaizer
 
     def get_permissions(self):
         if self.request.method not in SAFE_METHODS:
