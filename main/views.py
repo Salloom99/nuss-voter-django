@@ -1,4 +1,3 @@
-import json
 from django.http import HttpResponse, JsonResponse
 from django.db.models.aggregates import Count
 from django.views.decorators.csrf import csrf_exempt
@@ -70,11 +69,9 @@ class VoterViewSet( mixins.RetrieveModelMixin,
 
 @csrf_exempt
 def monitor_register(request):
-    if request.method == 'POST':
-        raw_data = request.body.decode('utf-8')
-        register_data = json.loads(raw_data)
-        user = MonitorUser(register_data)
-        return JsonResponse({'token': f'{user.token}'})
+    if request.method == 'POST':        
+        user = MonitorUser.from_body(request.body)
+        return user.response()
 
 @csrf_exempt
 def get_token(request, qr_id):

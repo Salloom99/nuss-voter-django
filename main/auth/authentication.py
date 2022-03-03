@@ -23,11 +23,17 @@ class CustomUserAuthentication(authentication.JWTAuthentication):
         return self.get_user(validated_token), validated_token
 
     def get_user(self, validated_token):
-       
         id = validated_token[api_settings.USER_ID_CLAIM]
+        user_type = validated_token['user_type']
 
-        if len(id.split('_')) == 3 :
+        if user_type == 'voter':
             return VoterUser(id)
+        elif user_type == 'monitor':
+            data = {
+                'unit': id,
+                'department': validated_token['department'],
+                'password': validated_token['password'],
+            }
+            return MonitorUser(data)
 
-        return MonitorUser.get(id)
         

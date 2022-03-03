@@ -1,3 +1,5 @@
+import json
+from django.http import JsonResponse
 from django.contrib.auth.models import AnonymousUser
 from rest_framework_simplejwt.tokens import RefreshToken
 from ..models import Unit, Voter, Department
@@ -9,52 +11,63 @@ class VoterUser(AnonymousUser):
     def __init__(self, qr_id) -> None:
         self.id = qr_id
         qr_parts = qr_id.split('_')
-        self.username = qr_parts[-1]
+        self.qr_id = qr_parts[-1]
+        self.is_voter = True
         self.unit_nickname = '_'.join(qr_parts[:2])
-        self.authenticated = Unit.objects.filter(nickname=self.unit_nickname).exists() \
-            and not Voter.objects.filter(qr_id=self.username, unit=self.unit_nickname).exists()
-        self.token = RefreshToken.for_user(self).access_token
-
-    @classmethod
-    def get(cls, qr_id):
-        qr_parts = qr_id.split('_')
-        id = qr_parts[-1]
-        unit_nickname = '_'.join(qr_parts[:2])
-        user = type(f'{cls}', (object,),
-                    {"id": qr_id, 'is_authenticated': not Voter.objects
-                    .filter(qr_id=id, unit=unit_nickname).exists()})()
-        user.token = RefreshToken.for_user(user).access_token
-        return user
-
+        
     @property
     def is_authenticated(self):
-        return self.authenticated
+        valid_unit = Unit.objects.filter(nickname=self.unit_nickname).exists()
+        voter_exists =  Voter.objects.filter(qr_id=self.qr_id, unit=self.unit_nickname).exists()
+        return valid_unit and not voter_exists
+
+    def get_token(self):
+        return RefreshToken.for_user(self).access_token
 
     @property
     def is_anonymous(self):
         return False
 
+    def __str__(self) -> str:
+        return self.id
 
+    
 class MonitorUser(AnonymousUser):
 
     def __init__(self, register_data) -> None:
         self.id = register_data['unit']
         self.is_staff = True
-        self.authenticated = Department.objects.get(
-            pk=register_data['department']).password == register_data['password']
-        self.token = RefreshToken.for_user(self).access_token
+        self.password = register_data['password']
+        self.department = register_data['department']
 
     @classmethod
-    def get(cls, unit):
-        user = type(f'{cls}', (object,), {"id": unit,
-                    'is_staff': True, 'is_authenticated': True})()
-        user.token = RefreshToken.for_user(user).access_token
-        return user
+    def from_body(cls, binary_data):
+        raw_data = binary_data.decode('utf-8')
+        register_data = json.loads(raw_data)
+        return cls(register_data)
+
+
+    def get_token(self):
+        token = RefreshToken.for_user(self).access_token
+        token['user_type'] = 'monitor'
+        token['department'] = self.department
+        token['password'] = self.password
+        return token
+
+    def response(self):
+        if self.is_authenticated:
+            return JsonResponse({'token': f'{self.get_token()}'})
+        return JsonResponse({'detail': 'invalid password'}, status=401)
 
     @property
     def is_authenticated(self):
-        return self.authenticated
+        return Department.objects.get(
+            pk=self.department).password == self.password
 
     @property
     def is_anonymous(self):
         return False
+    
+    def __str__(self) -> str:
+        return self.id
+
