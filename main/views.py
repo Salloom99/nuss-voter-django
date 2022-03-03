@@ -9,6 +9,7 @@ from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated, S
 from django_filters.rest_framework import DjangoFilterBackend
 from main import serializers
 from main.auth.users import VoterUser, MonitorUser
+from main.auth.permissions import FinishedUnit, IsVoter
 from .models import Department, Unit, Nominee, Voter
 from .auth.decryptor import encrypt, decrypt
 
@@ -25,7 +26,7 @@ class UnitViewSet(ModelViewSet):
 
     def get_permissions(self):
         if self.request.method == 'PUT':
-            return [IsAdminUser()]
+            return [FinishedUnit(), IsAdminUser()]
         return [AllowAny()]
 
     def get_serializer_class(self):
@@ -57,9 +58,9 @@ class VoterViewSet( mixins.RetrieveModelMixin,
     filterset_fields = ['unit']
     
     def get_permissions(self):
-        if self.request.method not in SAFE_METHODS:
-            return [IsAdminUser()]
-        return [IsAuthenticated()]
+        if self.request.method == 'POST':
+            return [IsVoter()]        
+        return [IsAdminUser()]
 
     def get_serializer_class(self):
         if self.request.method == 'POST':
