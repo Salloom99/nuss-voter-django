@@ -1,4 +1,4 @@
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.db.models.aggregates import Count
 from rest_framework import viewsets, mixins
 from rest_framework.decorators import action
@@ -64,7 +64,7 @@ class VoterViewSet( mixins.RetrieveModelMixin,
     @action(detail=False, permission_classes=[AllowAny], url_path='get-token/(?P<qr_id>[^/.]+)')
     def get_token(self, request, qr_id):
         user = VoterUser(qr_id)
-        return HttpResponse(user.token)
+        return JsonResponse({'token': user.token})
 
 
 def say_hello(request):
