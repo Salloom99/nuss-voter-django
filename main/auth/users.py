@@ -37,6 +37,7 @@ class MonitorUser(AnonymousUser):
     def __init__(self, register_data) -> None:
         self.id = register_data['unit']
         self.is_staff = True
+        self.is_voter = False
         self.password = register_data['password']
         self.department = register_data['department']
 
