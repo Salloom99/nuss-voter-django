@@ -67,11 +67,6 @@ class VoterViewSet( mixins.RetrieveModelMixin,
             return serializers.CreateVoterSerializer
         return serializers.VoterSerilaizer
 
-    @action(detail=False, permission_classes=[AllowAny], url_path='get-token/(?P<qr_id>[^/.]+)')
-    def get_token(self, request, qr_id):
-        user = VoterUser(qr_id)
-        return JsonResponse({'token': user.token})
-
 
 @csrf_exempt
 def monitor_register(request):
@@ -81,6 +76,10 @@ def monitor_register(request):
         user = MonitorUser(register_data)
         return JsonResponse({'token': f'{user.token}'})
 
+@csrf_exempt
+def get_token(request, qr_id):
+    user = VoterUser(qr_id)
+    return JsonResponse({'token': f'{user.token}'})
 
 def say_hello(request):
     if request.user.is_authenticated:

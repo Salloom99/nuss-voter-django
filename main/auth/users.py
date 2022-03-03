@@ -3,6 +3,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from ..models import Unit, Voter, Department
 # from .decryptor import decrypt
 
+
 class VoterUser(AnonymousUser):
 
     def __init__(self, qr_id) -> None:
@@ -14,6 +15,17 @@ class VoterUser(AnonymousUser):
             and not Voter.objects.filter(qr_id=self.username, unit=self.unit_nickname).exists()
         self.token = RefreshToken.for_user(self).access_token
 
+    @classmethod
+    def get(cls, qr_id):
+        qr_parts = qr_id.split('_')
+        id = qr_parts[-1]
+        unit_nickname = '_'.join(qr_parts[:2])
+        user = type(f'{cls}', (object,),
+                    {"id": qr_id, 'is_authenticated': not Voter.objects
+                    .filter(qr_id=id, unit=unit_nickname).exists()})()
+        user.token = RefreshToken.for_user(user).access_token
+        return user
+
     @property
     def is_authenticated(self):
         return self.authenticated
@@ -23,18 +35,19 @@ class VoterUser(AnonymousUser):
         return False
 
 
-
 class MonitorUser(AnonymousUser):
 
     def __init__(self, register_data) -> None:
         self.id = register_data['unit']
         self.is_staff = True
-        self.authenticated = Department.objects.get(pk=register_data['department']).password == register_data['password']
+        self.authenticated = Department.objects.get(
+            pk=register_data['department']).password == register_data['password']
         self.token = RefreshToken.for_user(self).access_token
 
     @classmethod
     def get(cls, unit):
-        user = type(f'{cls}',(object,),{"id": unit, 'is_staff': True, 'is_authenticated': True})()
+        user = type(f'{cls}', (object,), {"id": unit,
+                    'is_staff': True, 'is_authenticated': True})()
         user.token = RefreshToken.for_user(user).access_token
         return user
 

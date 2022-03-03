@@ -17,3 +17,4 @@ tests/report/
 fixtures/
 
 voters2.json
+.vscode/
