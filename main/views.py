@@ -1,9 +1,8 @@
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse
 from django.db.models.aggregates import Count
-from django.views.decorators.csrf import csrf_exempt
 from rest_framework.response import Response
 from rest_framework import viewsets, mixins
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view
 from rest_framework.filters import OrderingFilter
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated, SAFE_METHODS
@@ -83,16 +82,15 @@ class VoterViewSet( mixins.RetrieveModelMixin,
         return Response({ 'total_votes':votes_count['pk__count']})
 
 
-@csrf_exempt
+@api_view(['POST'])
 def monitor_register(request):
-    if request.method == 'POST':        
-        user = MonitorUser.from_body(request.body)
-        return user.response()
+    user = MonitorUser.from_body(request.body)
+    return user.response()
 
-@csrf_exempt
+@api_view(['GET'])
 def get_token(request, qr_id):
     user = VoterUser(qr_id)
-    return JsonResponse({'token': f'{user.token}'})
+    return Response({ 'token': f'{user.get_token()}' })
 
 def say_hello(request):
     if request.user.is_authenticated:
