@@ -1,7 +1,7 @@
 from django.http import HttpResponse
 from django.db.models.aggregates import Count
-from rest_framework.response import Response
 from rest_framework import viewsets, mixins
+from rest_framework.response import Response
 from rest_framework.decorators import action, api_view
 from rest_framework.filters import OrderingFilter
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
@@ -10,6 +10,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from main import serializers
 from main.auth.users import VoterUser, MonitorUser
 from main.auth.permissions import FinishedUnit, IsVoter
+from .mixins import BulkCreateModelMixin
 from .models import Department, Unit, Nominee, Voter
 from .auth.decryptor import encrypt, decrypt
 
@@ -35,7 +36,10 @@ class UnitViewSet(ModelViewSet):
         return serializers.UnitSerilaizer
 
 
-class NomineeViewSet(ModelViewSet):
+class NomineeViewSet(mixins.RetrieveModelMixin,
+                     mixins.ListModelMixin,
+                     BulkCreateModelMixin,
+                     viewsets.GenericViewSet):
     queryset = Nominee.objects.annotate(votes_count=Count('votes'))
     filter_backends = [DjangoFilterBackend, OrderingFilter]
     filterset_fields = ['unit']
@@ -52,10 +56,10 @@ class NomineeViewSet(ModelViewSet):
         return [IsAuthenticated()]
 
 
-class VoterViewSet( mixins.RetrieveModelMixin,
-                    mixins.ListModelMixin,
-                    mixins.CreateModelMixin,
-                    viewsets.GenericViewSet):
+class VoterViewSet(mixins.RetrieveModelMixin,
+                   mixins.ListModelMixin,
+                   mixins.CreateModelMixin,
+                   viewsets.GenericViewSet):
     queryset = Voter.objects.select_related('unit').prefetch_related('votes')
     filter_backends = [DjangoFilterBackend]
     # filterset_class = VoterFilter
