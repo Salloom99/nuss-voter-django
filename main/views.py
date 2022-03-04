@@ -1,6 +1,7 @@
 from django.http import HttpResponse, JsonResponse
 from django.db.models.aggregates import Count
 from django.views.decorators.csrf import csrf_exempt
+from rest_framework.response import Response
 from rest_framework import viewsets, mixins
 from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter
@@ -70,6 +71,16 @@ class VoterViewSet( mixins.RetrieveModelMixin,
         if self.request.method == 'POST':
             return serializers.CreateVoterSerializer
         return serializers.VoterSerilaizer
+
+    @action(
+        detail=False,
+        methods=['get'],
+        permission_classes=[IsAdminUser],
+        url_path= r'total-in/(?P<unit>\w+)'
+    )
+    def get_total_votes(self, request, unit):
+        votes_count = Voter.objects.filter(unit=unit).aggregate(Count('pk'))
+        return Response({ 'total_votes':votes_count['pk__count']})
 
 
 @csrf_exempt
