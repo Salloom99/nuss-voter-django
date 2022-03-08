@@ -1,7 +1,6 @@
 from django.http import HttpResponse
 from django.db.models.aggregates import Count
 from rest_framework import viewsets, mixins
-from rest_framework.response import Response
 from rest_framework.decorators import action, api_view
 from rest_framework.filters import OrderingFilter
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
@@ -83,7 +82,7 @@ class VoterViewSet(mixins.RetrieveModelMixin,
     )
     def get_total_votes(self, request, unit):
         votes_count = Voter.objects.filter(unit=unit).aggregate(Count('pk'))
-        return Response({ 'total_votes':votes_count['pk__count']})
+        return HttpResponse(votes_count['pk__count'])
 
 
 @api_view(['POST'])
@@ -94,7 +93,7 @@ def monitor_register(request):
 @api_view(['GET'])
 def get_token(request, qr_id):
     user = VoterUser(qr_id)
-    return Response({ 'token': f'{user.get_token()}' })
+    return HttpResponse(f'{user.get_token()}')
 
 def say_hello(request):
     if request.user.is_authenticated:

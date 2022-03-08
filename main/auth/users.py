@@ -1,4 +1,5 @@
 import json
+from django.http import HttpResponse
 from rest_framework.response import Response
 from django.contrib.auth.models import AnonymousUser
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -57,8 +58,8 @@ class MonitorUser(AnonymousUser):
 
     def response(self):
         if self.is_authenticated:
-            return Response({'token': f'{self.get_token()}'})
-        return Response({'detail': 'invalid password'}, status=401)
+            return HttpResponse(f'{self.get_token()}')
+        return Response({'password': 'invalid password'}, status=401)
 
     @property
     def is_authenticated(self):
