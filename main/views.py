@@ -17,6 +17,7 @@ from .auth.decryptor import encrypt, decrypt
 class DepartmentViewSet(ReadOnlyModelViewSet):
     queryset = Department.objects.all()
     serializer_class = serializers.DepartmentSerilaizer
+    permission_classes = [AllowAny]
 
 
 class UnitViewSet(ModelViewSet):
@@ -37,6 +38,7 @@ class UnitViewSet(ModelViewSet):
 
 class NomineeViewSet(mixins.RetrieveModelMixin,
                      mixins.ListModelMixin,
+                     mixins.DestroyModelMixin,
                      BulkCreateModelMixin,
                      viewsets.GenericViewSet):
     queryset = Nominee.objects.annotate(votes_count=Count('votes'))
