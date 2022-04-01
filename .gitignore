@@ -18,3 +18,5 @@ fixtures/
 
 voters2.json
 .vscode/
+.env
+db.sqlite3

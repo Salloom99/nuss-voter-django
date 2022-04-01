@@ -12,6 +12,7 @@ django-filter = "*"
 djangorestframework-simplejwt = "*"
 djoser = "*"
 django-cors-headers = "*"
+django-environ = "*"
 
 [dev-packages]
 autopep8 = "*"
